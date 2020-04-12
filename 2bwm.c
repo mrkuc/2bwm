@@ -510,14 +510,7 @@ changeworkspace_helper(const uint32_t ws)
 			xcb_map_window(conn, client->id);
 	}
 	curws = ws;
-	pointer = xcb_query_pointer_reply(conn, xcb_query_pointer(conn,
-				screen->root), 0);
-	if(pointer == NULL)
-		setfocus(NULL);
-	else {
-		setfocus(findclient(&pointer->child));
-		free(pointer);
-	}
+    focusnext_helper(true);
 }
 
 void
