@@ -48,6 +48,7 @@ static xcb_drawable_t top_win=0;           // Window always on top.
 static struct item *winlist = NULL;        // Global list of all client windows.
 static struct item *monlist = NULL;        // List of all physical monitor outputs.
 static struct item *wslist[WORKSPACES];
+xcb_drawable_t last_focused_ids[WORKSPACES];
 ///---Global configuration.---///
 static const char *atomnames[NB_ATOMS][1] = {
 	{"WM_DELETE_WINDOW"},
@@ -510,7 +511,11 @@ changeworkspace_helper(const uint32_t ws)
 			xcb_map_window(conn, client->id);
 	}
 	curws = ws;
-    focusnext_helper(true);
+    if (last_focused_ids[curws] > 0 && (client = findclient(&last_focused_ids[curws])) != NULL) {
+      setfocus(client);
+    } else {
+      focusnext_helper(true);
+    }
 }
 
 void
@@ -1613,6 +1618,7 @@ setfocus(struct client *client)// Set focus on window client.
 
 	/* Remember the new window as the current focused window. */
 	focuswin = client;
+    last_focused_ids[curws] = focuswin->id;
 
 	grabbuttons(client);
 	setborders(client,true);
@@ -3286,6 +3292,9 @@ setup(int scrno)
 	events[XCB_CIRCULATE_REQUEST]   = circulaterequest;
 	events[XCB_BUTTON_PRESS]        = buttonpress;
 	events[XCB_CLIENT_MESSAGE]      = clientmessage;
+
+    for (i=0; i<WORKSPACES; i++)
+		last_focused_ids[i] = 0;
 
 	return true;
 }
